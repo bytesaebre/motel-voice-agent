@@ -6,8 +6,9 @@ Guidelines for AI coding assistants working on this project.
 
 ```bash
 npm install         # Install dependencies
-node index.js       # Run the server
-# TODO: add dev script (tsx watch), build, lint, test
+npm run dev         # Start dev server with hot reload (tsx watch)
+npm start           # Start production server
+# TODO: add build, lint, test
 ```
 
 There is currently no build step, linter, or test suite configured.
@@ -43,8 +44,9 @@ There is currently no build step, linter, or test suite configured.
 |---|---|
 | `express@^5.2.1` | HTTP server and routing |
 | `@types/express@^5.0.6` | TypeScript type definitions |
+| `tsx` | TypeScript execution at runtime |
 
-Expected future additions: Twilio SDK, AI provider SDK (OpenAI/Anthropic), STT/TTS service SDK, `dotenv`, `tsx`/`ts-node` for running TypeScript, TwiML builder utility.
+Expected future additions: Twilio SDK, AI provider SDK (OpenAI/Anthropic), STT/TTS service SDK, `dotenv`, TwiML builder utility.
 
 ## Style
 
