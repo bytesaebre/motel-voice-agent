@@ -19,9 +19,8 @@ WebhookRouter.post("/voice", (req: Request, res: Response) => {
 
     res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="Polly.Matthew">Thank you for calling Motel 6 Simpsonville, how may I assist you today?</Say>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Polly.Matthew">I didn't catch that. Could you please repeat?</Say>
+        <Say voice="Polly.Matthew">Thank you for calling Motel 6 Simpsonville, how may I assist you today?</Say>
     </Gather>
     <Say voice="Polly.Matthew">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
@@ -33,14 +32,28 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
     const speechResult = req.body.SpeechResult || "";
     console.log("POST /voice/response received, CallSid:", callSid, "speech:", speechResult);
 
+    if (!speechResult.trim()) {
+        console.log("Empty speech result for CallSid:", callSid, "— re-prompting");
+        res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
+        <Say voice="Polly.Matthew">I didn't catch that. Could you please repeat?</Say>
+    </Gather>
+    <Say voice="Polly.Matthew">I didn't receive any input. Goodbye.</Say>
+    <Hangup/>
+</Response>`);
+        return;
+    }
+
     try {
+        console.log("Calling Gemini for CallSid:", callSid);
         const aiResponse = await generateResponse(callSid, speechResult);
+        console.log("Gemini response for CallSid:", callSid, ":", aiResponse);
 
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="Polly.Matthew">${escapeXml(aiResponse)}</Say>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Polly.Matthew">I didn't catch that. Could you please repeat?</Say>
+        <Say voice="Polly.Matthew">${escapeXml(aiResponse)}</Say>
     </Gather>
     <Say voice="Polly.Matthew">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
