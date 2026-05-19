@@ -16,4 +16,8 @@ WebhookRouter.post("/voice", (req: Request, res: Response) => {
     res.send(twiml);
 });
 
+WebhookRouter.get("/voice", (_req: Request, res: Response) => {
+    res.send("Voice webhook endpoint is live. Use POST to trigger TwiML.");
+});
+
 export default WebhookRouter;
