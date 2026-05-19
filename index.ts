@@ -4,6 +4,15 @@ import WebhookRouter from "./src/router/webhooks";
 const app = express();
 
 app.use(express.json());
+
+app.use((_req, res, next) => {
+    res.setHeader(
+        "Content-Security-Policy",
+        "default-src 'none'; connect-src 'self'"
+    );
+    next();
+});
+
 app.use("/webhooks", WebhookRouter);
 
 app.get("/", (req: Request, res: Response) => {
