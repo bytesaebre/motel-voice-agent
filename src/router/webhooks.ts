@@ -20,9 +20,9 @@ WebhookRouter.post("/voice", (req: Request, res: Response) => {
     res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Polly.Matthew">Thank you for calling Motel 6 Simpsonville, how may I assist you today?</Say>
+        <Say voice="Google.en-US-Chirp3-HD-Kore">Thank you for calling Motel 6 Simpsonville, how may I assist you today?</Say>
     </Gather>
-    <Say voice="Polly.Matthew">I didn't receive any input. Goodbye.</Say>
+    <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
 </Response>`);
 });
@@ -37,9 +37,9 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Polly.Matthew">I didn't catch that. Could you please repeat?</Say>
+        <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't catch that. Could you please repeat?</Say>
     </Gather>
-    <Say voice="Polly.Matthew">I didn't receive any input. Goodbye.</Say>
+    <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
 </Response>`);
         return;
@@ -53,9 +53,9 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Polly.Matthew">${escapeXml(aiResponse)}</Say>
+        <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse)}</Say>
     </Gather>
-    <Say voice="Polly.Matthew">I didn't receive any input. Goodbye.</Say>
+    <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
 </Response>`);
     } catch (error) {
@@ -63,7 +63,7 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
         endConversation(callSid);
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="Polly.Matthew">I'm sorry, I'm having trouble processing your request. Please try again later.</Say>
+    <Say voice="Google.en-US-Chirp3-HD-Kore">I'm sorry, I'm having trouble processing your request. Please try again later.</Say>
     <Hangup/>
 </Response>`);
     }
