@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import WebhookRouter from "./src/router/webhooks";
+import { createStreamServer } from "./src/handler/stream";
 
 const app = express();
 
@@ -36,6 +38,10 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 </Response>`);
 });
 
-app.listen(process.env.PORT || 3000, () => {
+const server = createServer(app);
+
+createStreamServer(server);
+
+server.listen(Number(process.env.PORT) || 3000, () => {
     console.log("Server started on port", process.env.PORT || 3000);
 });

@@ -4,6 +4,8 @@ import { generateResponse, endConversation } from "../handler/gemini";
 
 const WebhookRouter = express.Router();
 
+const streamUrl = process.env.STREAM_URL || "wss://your-domain.com/media-stream";
+
 function escapeXml(text: string): string {
     return text
         .replace(/&/g, "&amp;")
@@ -48,12 +50,35 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
     try {
         console.log("Calling Gemini for CallSid:", callSid);
         const aiResponse = await generateResponse(callSid, speechResult);
-        console.log("Gemini response for CallSid:", callSid, ":", aiResponse);
+        console.log("Gemini response for CallSid:", callSid, ":", JSON.stringify(aiResponse));
+
+        if (aiResponse.action === "hangup") {
+            res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse.text)}</Say>
+    <Hangup/>
+</Response>`);
+            endConversation(callSid);
+            return;
+        }
+
+        if (aiResponse.action === "transfer") {
+            res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse.text)}</Say>
+    <Hangup/>
+</Response>`);
+            endConversation(callSid);
+            return;
+        }
 
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
+    <Connect>
+        <Stream url="${escapeXml(streamUrl)}" />
+    </Connect>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse)}</Say>
+        <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse.text)}</Say>
     </Gather>
     <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
