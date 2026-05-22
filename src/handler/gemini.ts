@@ -54,41 +54,42 @@ export interface GeminiResponse {
   action: "continue" | "transfer" | "hangup";
 }
 
-const pendingStreamText = new Map<string, string>();
+const pendingMessages = new Map<string, string>();
 
-export async function generateResponse(callSid: string, userMessage: string): Promise<GeminiResponse> {
+export function queueUserMessage(callSid: string, message: string): void {
+  pendingMessages.set(callSid, message);
+}
+
+export async function* generateResponseStream(callSid: string): AsyncGenerator<string> {
   const history = getHistory(callSid);
+  const userMessage = pendingMessages.get(callSid);
+  pendingMessages.delete(callSid);
 
   const chat = model.startChat({ history });
 
-  const streamResult = await chat.sendMessageStream(userMessage);
+  const streamResult = await chat.sendMessageStream(userMessage ?? "");
   let fullText = "";
+
   for await (const chunk of streamResult.stream) {
     const chunkText = chunk.text();
-    if (chunkText) fullText += chunkText;
+    if (chunkText) {
+      fullText += chunkText;
+      yield chunkText;
+    }
   }
 
-  appendMessage(callSid, { role: "user", parts: [{ text: userMessage }] });
   appendMessage(callSid, { role: "model", parts: [{ text: fullText }] });
-
-  try {
-    const parsed = JSON.parse(fullText.trim()) as GeminiResponse;
-    if (!parsed.text || !parsed.action) throw new Error("Invalid JSON");
-    pendingStreamText.set(callSid, parsed.text);
-    return parsed;
-  } catch {
-    pendingStreamText.set(callSid, fullText.trim());
-    return { text: fullText.trim(), action: "continue" };
-  }
 }
 
-export function getPendingStreamText(callSid: string): string | undefined {
-  const text = pendingStreamText.get(callSid);
-  pendingStreamText.delete(callSid);
-  return text;
+export function parseResponse(rawText: string): GeminiResponse {
+  try {
+    const parsed = JSON.parse(rawText.trim()) as GeminiResponse;
+    if (parsed.text && parsed.action) return parsed;
+  } catch { /* fall through */ }
+  return { text: rawText.trim(), action: "continue" };
 }
 
 export function endConversation(callSid: string): void {
   clearHistory(callSid);
-  pendingStreamText.delete(callSid);
+  pendingMessages.delete(callSid);
 }

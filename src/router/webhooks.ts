@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { generateResponse, endConversation } from "../handler/gemini";
+import { queueUserMessage, endConversation } from "../handler/gemini";
 
 const WebhookRouter = express.Router();
 
@@ -48,29 +48,7 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
     }
 
     try {
-        console.log("Calling Gemini for CallSid:", callSid);
-        const aiResponse = await generateResponse(callSid, speechResult);
-        console.log("Gemini response for CallSid:", callSid, ":", JSON.stringify(aiResponse));
-
-        if (aiResponse.action === "hangup") {
-            res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse.text)}</Say>
-    <Hangup/>
-</Response>`);
-            endConversation(callSid);
-            return;
-        }
-
-        if (aiResponse.action === "transfer") {
-            res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse.text)}</Say>
-    <Hangup/>
-</Response>`);
-            endConversation(callSid);
-            return;
-        }
+        queueUserMessage(callSid, speechResult);
 
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -78,13 +56,13 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
         <Stream url="${escapeXml(streamUrl)}" />
     </Connect>
     <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Google.en-US-Chirp3-HD-Kore">${escapeXml(aiResponse.text)}</Say>
+        <Say voice="Google.en-US-Chirp3-HD-Kore">Is there anything else I can help with?</Say>
     </Gather>
     <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't receive any input. Goodbye.</Say>
     <Hangup/>
 </Response>`);
     } catch (error) {
-        console.error("Gemini error for CallSid:", callSid, error);
+        console.error("Error for CallSid:", callSid, error);
         endConversation(callSid);
         res.type("text/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
