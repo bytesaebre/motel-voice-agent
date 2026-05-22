@@ -55,11 +55,6 @@ WebhookRouter.post("/voice/response", async (req: Request, res: Response) => {
     <Connect>
         <Stream url="${escapeXml(streamUrl)}" />
     </Connect>
-    <Gather input="speech" action="/webhooks/voice/response" timeout="5" speechTimeout="auto">
-        <Say voice="Google.en-US-Chirp3-HD-Kore">Is there anything else I can help with?</Say>
-    </Gather>
-    <Say voice="Google.en-US-Chirp3-HD-Kore">I didn't receive any input. Goodbye.</Say>
-    <Hangup/>
 </Response>`);
     } catch (error) {
         console.error("Error for CallSid:", callSid, error);
